@@ -1102,7 +1102,7 @@ struct DirectoryShare {
       let downloadSemaphore = DispatchSemaphore(value: 0)
       Task {
         do {
-          let (archiveData, archiveResponse) = try await URLSession.shared.data(for: archiveRequest)
+          let (archiveData, archiveResponse) = try await Fetcher.sharedURLSession.data(for: archiveRequest)
           if archiveData.isEmpty {
             print("Remote archive is empty!")
           } else {
