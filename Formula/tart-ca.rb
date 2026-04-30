@@ -1,9 +1,9 @@
 class TartCa < Formula
   desc "Tart fork with TART_EXTRA_CA_CERTS support for private/internal OCI registries"
   homepage "https://github.com/Operationrange/tart-ca"
-  url "https://github.com/Operationrange/tart-ca/archive/refs/tags/v2.32.1-ca.1.tar.gz"
-  version "2.32.1-ca.1"
-  sha256 "aca4be126437774d18a74eb74b9c7bd0ccfa3232f2b070720c2178eaced0fbd7"
+  url "https://github.com/Operationrange/tart-ca/archive/refs/tags/v2.32.1-ca.2.tar.gz"
+  version "2.32.1-ca.2"
+  sha256 "8f0c55c16f014d7d2d31718f09af376d4ee0e22cec6760071669a2deb5b3908b"
   license "Fair-Source-100"
 
   head "https://github.com/Operationrange/tart-ca.git", branch: "extra-ca"
