@@ -17,6 +17,15 @@ class TartCa < Formula
   def install
     system "swift", "build", "--disable-sandbox", "--configuration", "release", "--arch", "arm64"
     bin.install ".build/release/tart" => "tart"
+    # Virtualization.framework requires the binary to be signed with the
+    # com.apple.security.virtualization entitlement. Ad-hoc sign locally —
+    # the upstream cask is signed with cirruslabs's Developer ID, which we
+    # cannot reproduce here.
+    system "codesign", "--force", "--sign", "-",
+           "--entitlements", "Resources/tart-dev.entitlements",
+           "--options", "runtime",
+           "--timestamp=none",
+           bin/"tart"
   end
 
   def caveats
