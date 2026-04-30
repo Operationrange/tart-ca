@@ -135,10 +135,37 @@ fileprivate class ExtraCATrustDelegate: NSObject, URLSessionDelegate {
     var error: CFError?
     if SecTrustEvaluateWithError(trust, &error) {
       completionHandler(.useCredential, URLCredential(trust: trust))
-    } else {
-      // Surface the original system error to the caller
-      completionHandler(.performDefaultHandling, nil)
+      return
     }
+
+    // Strict evaluation failed. If the chain is rooted in one of our
+    // explicitly opted-in extra anchors, override Apple-specific SSL
+    // policy issues (e.g. "Certificate exceeds maximum temporal validity
+    // period") via SecTrustSetExceptions. Equivalent to a user clicking
+    // "trust" in a browser, but scoped to this exact cert chain.
+    if ExtraCATrustDelegate.chainEndsInOurAnchor(trust, anchors: extraAnchors),
+       let exceptions = SecTrustCopyExceptions(trust) {
+      SecTrustSetExceptions(trust, exceptions)
+      var err2: CFError?
+      if SecTrustEvaluateWithError(trust, &err2) {
+        completionHandler(.useCredential, URLCredential(trust: trust))
+        return
+      }
+    }
+
+    let host = challenge.protectionSpace.host
+    let reason = error.map { String(describing: $0) } ?? "unknown"
+    FileHandle.standardError.write(Data("tart: SecTrustEvaluate failed for \(host) with extra anchors: \(reason)\n".utf8))
+    completionHandler(.performDefaultHandling, nil)
+  }
+
+  private static func chainEndsInOurAnchor(_ trust: SecTrust, anchors: [SecCertificate]) -> Bool {
+    guard let chain = SecTrustCopyCertificateChain(trust) as? [SecCertificate],
+          let top = chain.last else {
+      return false
+    }
+    let topData = SecCertificateCopyData(top) as Data
+    return anchors.contains { (SecCertificateCopyData($0) as Data) == topData }
   }
 
   private static func loadExtraAnchors() -> [SecCertificate] {
